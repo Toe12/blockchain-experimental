@@ -10,7 +10,7 @@ Setting up Hyperledger Fabric on a Mac for Node.js involves several steps, inclu
 
 2. **Docker Desktop**: Install Docker Desktop for Mac. You can download it from [here](https://www.docker.com/products/docker-desktop).
 
-3. **Node.js**: Install Node.js and jq (version 8.x or 10.x) and npm. You can use Homebrew:
+3. **Node.js**: Install Node.js, jq and npm. You can use Homebrew:
 
    ```sh
    brew install node
@@ -24,24 +24,18 @@ Setting up Hyperledger Fabric on a Mac for Node.js involves several steps, inclu
 
 ### Step 1: Install Fabric Samples, Binaries, and Docker Images
 
-1. **Clone the Fabric Samples repository**:
+**Download the Fabric binaries and Docker images**:
 
-   ```sh
-   git clone https://github.com/hyperledger/fabric-samples.git
-   cd fabric-samples
-   ```
-
-2. **Download the Fabric binaries and Docker images**:
-   ```sh
-   curl -sSL https://bit.ly/2ysbOFE | bash -s
-   ```
+```sh
+curl -sSL https://bit.ly/2ysbOFE | bash -s
+```
 
 ### Step 2: Set Up Your Environment
 
 1. **Add Fabric binaries to your PATH**. Add the following lines to your `.bash_profile`, `.zshrc`, or equivalent:
 
    ```sh
-   export PATH=$PATH:/path/to/fabric-samples/bin
+   export PATH=$PATH:/path/to/bin
    ```
 
 2. **Source the profile to apply changes**:
@@ -80,7 +74,7 @@ Setting up Hyperledger Fabric on a Mac for Node.js involves several steps, inclu
 1. **Navigate to the application directory**:
 
    ```sh
-   cd fabric-samples/asset-transfer-basic/application-javascript
+   cd backend/src
    ```
 
 2. **Install the required Node.js packages**:
