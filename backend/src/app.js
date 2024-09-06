@@ -69,6 +69,23 @@ app.get("/assets", async (req, res) => {
   }
 });
 
+app.get("/asset-history/:id", async (req, res) => {
+  const assetId = req.params.id;
+  try {
+    const contract = await getContract();
+    const resultBytes = await contract.evaluateTransaction(
+      "GetAssetHistory",
+      assetId
+    );
+    const resultJson = utf8Decoder.decode(resultBytes);
+    const result = JSON.parse(resultJson);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error(`Failed to get assets: ${error}`);
+    res.status(500).send(`Error retrieving assets: ${error.message}`);
+  }
+});
+
 app.get("/asset/:id", async (req, res) => {
   const assetId = req.params.id;
   try {
@@ -92,8 +109,6 @@ app.delete("/delete-asset/:id", async (req, res) => {
   try {
     const contract = await getContract();
     await contract.evaluateTransaction("DeleteAsset", assetId);
-    //const resultJson = utf8Decoder.decode(resultBytes);
-    //const result = JSON.parse(resultJson);
     res.status(200).send(`Asset with ID ${assetId} has been deleted.`);
   } catch (error) {
     console.error(`Failed to get assets: ${error}`);
