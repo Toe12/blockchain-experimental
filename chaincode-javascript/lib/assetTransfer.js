@@ -47,15 +47,6 @@ class AssetTransfer extends Contract {
     return JSON.stringify(asset);
   }
 
-  // ReadAsset returns the asset stored in the world state with given id.
-  async ReadAsset(ctx, id) {
-    const assetJSON = await ctx.stub.getState(id); // get the asset from chaincode state
-    if (!assetJSON || assetJSON.length === 0) {
-      throw new Error(`The asset ${id} does not exist`);
-    }
-    return assetJSON.toString();
-  }
-
   // UpdateAsset updates an existing asset in the world state with provided parameters.
   async UpdateAsset(ctx, id, name, policyNumber, owner) {
     const exists = await this.AssetExists(ctx, id);
@@ -92,6 +83,15 @@ class AssetTransfer extends Contract {
     return assetJSON && assetJSON.length > 0;
   }
 
+  // ReadAsset returns the asset stored in the world state with given id.
+  async ReadAsset(ctx, id) {
+    const assetJSON = await ctx.stub.getState(id); // get the asset from chaincode state
+    if (!assetJSON || assetJSON.length === 0) {
+      throw new Error(`The asset ${id} does not exist`);
+    }
+    return assetJSON.toString();
+  }
+
   // TransferAsset updates the owner field of asset with given id in the world state.
   async TransferAsset(ctx, id, newOwner) {
     const assetString = await this.ReadAsset(ctx, id);
@@ -104,6 +104,43 @@ class AssetTransfer extends Contract {
       Buffer.from(stringify(sortKeysRecursive(asset)))
     );
     return oldOwner;
+  }
+
+  // GetAssetHistory returns the history of an asset with given id.
+  async GetAssetHistory(ctx, id) {
+    const exists = await this.AssetExists(ctx, id);
+    if (!exists) {
+      throw new Error(`The asset ${id} does not exist`);
+    }
+
+    const iterator = await ctx.stub.getHistoryForKey(id);
+    const allResults = [];
+
+    while (true) {
+      const res = await iterator.next();
+
+      if (res.value && res.value.value.toString()) {
+        const timestamp = res.value.timestamp;
+        const txId = res.value.tx_id;
+        let asset;
+
+        try {
+          asset = JSON.parse(res.value.value.toString("utf8"));
+        } catch (err) {
+          console.log(err);
+          asset = res.value.value.toString("utf8");
+        }
+
+        allResults.push({ txId, timestamp, asset });
+      }
+
+      if (res.done) {
+        await iterator.close();
+        break;
+      }
+    }
+
+    return JSON.stringify(allResults);
   }
 
   // GetAllAssets returns all assets found in the world state.

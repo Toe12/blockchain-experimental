@@ -35,12 +35,12 @@ curl -sSL https://bit.ly/2ysbOFE | bash -s
 1. **Add Fabric binaries to your PATH**. Add the following lines to your `.bash_profile`, `.zshrc`, or equivalent:
 
    ```sh
-   export PATH=$PATH:/path/to/bin
+   echo 'export PATH=$PATH:/path/to/bin' >> ~/.zshrc
    ```
 
 2. **Source the profile to apply changes**:
    ```sh
-   source ~/.bash_profile
+   source ~/.zshrc
    ```
 
 ### Step 3: Launch the Test Network
@@ -48,7 +48,7 @@ curl -sSL https://bit.ly/2ysbOFE | bash -s
 1. **Navigate to the test network directory**:
 
    ```sh
-   cd fabric-samples/test-network
+   cd test-network
    ```
 
 2. **Start the test network**:
