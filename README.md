@@ -1,5 +1,3 @@
----
-
 ## Prerequisites
 
 1. **Docker Desktop**: Install Docker Desktop for Mac. You can download it [here](https://www.docker.com/products/docker-desktop).
