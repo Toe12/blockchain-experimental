@@ -1,80 +1,100 @@
-Setting up Hyperledger Fabric on a Mac for Node.js involves several steps, including installing the necessary dependencies, setting up the development environment, and configuring Hyperledger Fabric. Here is a step-by-step guide:
+---
 
-### Prerequisites
+## Prerequisites
 
-1. **Homebrew**: Ensure you have Homebrew installed. You can install it using:
+1. **Docker Desktop**: Install Docker Desktop for Mac. You can download it [here](https://www.docker.com/products/docker-desktop).
 
-   ```sh
-   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-   ```
-
-2. **Docker Desktop**: Install Docker Desktop for Mac. You can download it from [here](https://www.docker.com/products/docker-desktop).
-
-3. **Node.js**: Install Node.js, jq and npm. You can use Homebrew:
+2. **Node.js**: Install Node.js, jq, and npm. You can use Homebrew to install them:
 
    ```sh
    brew install node
    brew install jq
    ```
 
-4. **Go**: Hyperledger Fabric requires Go for certain components. Install Go using Homebrew:
-   ```sh
-   brew install go
-   ```
+---
 
-### Step 1: Install Fabric Samples, Binaries, and Docker Images
+## Using Node.js as an Application Developer
 
-**Download the Fabric binaries and Docker images**:
+### Node.js as a Chaincode Example
 
-```sh
-curl -sSL https://bit.ly/2ysbOFE | bash -s
-```
+In this example, we will use the predefined `asset-transfer-basic` chaincode.
 
-### Step 2: Set Up Your Environment
+1. **Set Up the Network and Chaincode**:
 
-1. **Add Fabric binaries to your PATH**. Add the following lines to your `.bash_profile`, `.zshrc`, or equivalent:
-
-   ```sh
-   echo 'export PATH=$PATH:/path/to/bin' >> ~/.zshrc
-   ```
-
-2. **Source the profile to apply changes**:
-   ```sh
-   source ~/.zshrc
-   ```
-
-### Step 3: Launch the Test Network
-
-1. **Navigate to the test network directory**:
-
-   ```sh
+   ```bash
+   # Switch to the test network folder
    cd test-network
+
+   # Bring up the network and create a channel
+   ./network.sh up createChannel -c channel1 -ca
+
+   # Install the asset-transfer-basic chaincode
+   cd ../chaincode-javascript
+   npm install
+   cd ../../test-network
+
+   export FABRIC_CFG_PATH=$PWD/../config/
+
+   # Package the chaincode
+   peer lifecycle chaincode package basic.tar.gz --path ../chaincode-javascript/ --lang node --label basic_1.0
+
+   # Install on peer0 of Org1
+   . ./scripts/envVar.sh
+   setGlobals 1
+   peer lifecycle chaincode install basic.tar.gz
+
+   # Install on peer0 of Org2
+   setGlobals 2
+   peer lifecycle chaincode install basic.tar.gz
+
+   # Query installed chaincode and get the package ID (PKGID)
+   setGlobals 1
+   peer lifecycle chaincode queryinstalled --peerAddresses localhost:7051 --tlsRootCertFiles organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+
+   export PKGID=basic_1.0:d2e3329812d27a187ea1f84b1a2c45cb7bf5e677a139044a3af3188e308f2c89
+
+   # Approve the chaincode for Org1
+   peer lifecycle chaincode approveformyorg -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com --tls --cafile $PWD/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem --channelID channel1 --name basic --version 1 --package-id $PKGID --sequence 1
+
+   # Approve the chaincode for Org2
+   setGlobals 2
+   peer lifecycle chaincode approveformyorg -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com --tls --cafile $PWD/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem --channelID channel1 --name basic --version 1 --package-id $PKGID --sequence 1
+
+   # Commit the chaincode
+   peer lifecycle chaincode commit -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com --tls --cafile $PWD/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem --channelID channel1 --name basic --peerAddresses localhost:7051 --tlsRootCertFiles $PWD/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt --peerAddresses localhost:9051 --tlsRootCertFiles organizations/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt --version 1 --sequence 1
+
+   # Verify the committed chaincode
+   peer lifecycle chaincode querycommitted --channelID channel1 --name basic --cafile ${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
+
+   # Check if containers are running
+   docker ps
+   docker-compose -f docker/docker-compose-test-net.yaml ps
    ```
 
-2. **Start the test network**:
+2. **Use the Asset Transfer Chaincode**:
 
-   ```sh
-   ./network.sh up
+   ```bash
+   # Initialize the ledger
+   peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com --tls --cafile ${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C channel1 -n basic --peerAddresses localhost:7051 --tlsRootCertFiles ${PWD}/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt --peerAddresses localhost:9051 --tlsRootCertFiles ${PWD}/organizations/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt -c '{"function":"InitLedger","Args":[]}'
+
+   # Query all assets
+   peer chaincode query -C channel1 -n basic -c '{"Args":["GetAllAssets"]}' | jq .
+
+   # Read a specific asset
+   peer chaincode query -C channel1 -n basic -c '{"Args":["ReadAsset","asset1"]}' | jq .
+
+   # Update an asset
+   peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com --tls --cafile ${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem -C channel1 -n basic --peerAddresses localhost:7051 --tlsRootCertFiles ${PWD}/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt --peerAddresses localhost:9051 --tlsRootCertFiles ${PWD}/organizations/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt -c '{"function":"UpdateAsset","Args":["asset1","green","10","Roland","600"]}'
    ```
 
-3. **Create a channel**:
-   ```sh
-   ./network.sh createChannel
-   ```
+---
 
-### Step 4: Install and Instantiate Chaincode
-
-1. **Deploy the chaincode using Node.js**:
-   ```sh
-   ./network.sh deployCC -ccn basic -ccp ../chaincode-javascript/ -ccl javascript
-   ```
-
-### Step 5: Set Up the Node.js Application
+## Node.js Application Setup
 
 1. **Navigate to the application directory**:
 
    ```sh
-   cd backend/src
+   cd backend
    ```
 
 2. **Install the required Node.js packages**:
@@ -84,25 +104,38 @@ curl -sSL https://bit.ly/2ysbOFE | bash -s
    ```
 
 3. **Run the application**:
-   ```sh
-   node app.js
-   ```
-
-### Step 6: Verify the Setup
-
-1. **Check the Docker containers** to ensure that the Hyperledger Fabric components are running:
 
    ```sh
-   docker ps
+   npm run dev
    ```
 
-2. **Interact with the application** to verify that it is communicating with the Hyperledger Fabric network as expected.
+---
 
-### Additional Resources
+## Chaincode Helper Files
+
+We utilize the following helper files for managing the chaincode and certificate authority (CA) actions:
+
+- `helper.js`
+- `caActions.js`
+- `ledgerActions.js`
+
+1. **Enroll Admin User**:
+
+   ```bash
+   node caActions.js admin
+   ```
+
+2. **Register and Enroll Application User**:
+
+   ```bash
+   node caActions.js user toearkar
+   ```
+
+---
+
+## Additional Resources
 
 - [Hyperledger Fabric Documentation](https://hyperledger-fabric.readthedocs.io/en/release-2.2/)
 - [Hyperledger Fabric Samples GitHub](https://github.com/hyperledger/fabric-samples)
 
-This setup should get you started with Hyperledger Fabric on your Mac for Node.js development. Let me know if you encounter any issues or need further assistance!
-
-https://hyperledger-fabric.readthedocs.io/en/latest/write_first_app.html
+---
