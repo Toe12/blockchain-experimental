@@ -1,28 +1,31 @@
 {
-    "name": "asset-transfer-basic",
-    "version": "1.0.0",
-    "description": "Asset Transfer Basic Application implemented in JavaScript using fabric-gateway",
-    "engines": {
-        "node": ">=18"
-    },
-    "scripts": {
-        "lint": "eslint src",
-        "pretest": "npm run lint",
-        "start": "node src/app.js"
-    },
-    "engineStrict": true,
-    "author": "Hyperledger",
-    "license": "Apache-2.0",
-    "dependencies": {
-        "@grpc/grpc-js": "^1.11",
-        "@hyperledger/fabric-gateway": "^1.5",
-        "express": "^4.20.0",
-        "fabric-network": "^2.2.20",
-        "send": "^0.19.0"
-    },
-    "devDependencies": {
-        "@eslint/js": "^9.10.0",
-        "eslint": "^9.10.0",
-        "globals": "^15.9.0"
-    }
+  "name": "asset-transfer-basic",
+  "version": "1.0.0",
+  "description": "Asset Transfer Basic Application implemented in JavaScript using fabric-gateway",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "lint": "eslint src",
+    "pretest": "npm run lint",
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "engineStrict": true,
+  "author": "Hyperledger",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@grpc/grpc-js": "^1.11",
+    "@hyperledger/fabric-gateway": "^1.5",
+    "express": "^5.0.0",
+    "fabric-network": "^2.2.20",
+    "nodemod": "^3.0.6",
+    "send": "^0.19.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.10.0",
+    "eslint": "^9.10.0",
+    "globals": "^15.9.0",
+    "nodemon": "^3.1.4"
+  }
 }
