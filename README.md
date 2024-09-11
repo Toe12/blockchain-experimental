@@ -1,6 +1,6 @@
 ## Prerequisites
 
-1. **Docker Desktop**: Install Docker Desktop for Mac. You can download it [here](https://www.docker.com/products/docker-desktop).
+1. **Docker Desktop**: To install docker desktop, you can download it [here](https://www.docker.com/).
 
 2. **Node.js**: Install Node.js, jq, and npm. You can use Homebrew to install them:
 
