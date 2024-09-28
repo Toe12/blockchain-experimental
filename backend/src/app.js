@@ -1,17 +1,23 @@
 const express = require("express");
-const { TextDecoder } = require("util");
 const { evaluateTransaction, submitTransaction } = require("./chaincodeHelper");
 
 const app = express();
 app.use(express.json());
 
+// This needs to be retirieved from the db or config file
 const userId = "toe";
+const org = "org2";
+const channel = "channel1";
+const chaincodeName = "basic";
 
 app.post("/create-asset", async (req, res) => {
   try {
     const { assetId, name, policyNumber, owner } = req.body;
     const result = await submitTransaction(
       userId,
+      org,
+      channel,
+      chaincodeName,
       "CreateAsset",
       assetId,
       name,
@@ -30,6 +36,9 @@ app.put("/update-asset", async (req, res) => {
     const { assetId, name, policyNumber, owner } = req.body;
     await submitTransaction(
       userId,
+      org,
+      channel,
+      chaincodeName,
       "UpdateAsset",
       assetId,
       name,
@@ -45,7 +54,13 @@ app.put("/update-asset", async (req, res) => {
 
 app.get("/assets", async (req, res) => {
   try {
-    const result = await evaluateTransaction(userId, "GetAllAssets");
+    const result = await evaluateTransaction(
+      userId,
+      org,
+      channel,
+      chaincodeName,
+      "GetAllAssets"
+    );
     res.status(200).json(JSON.parse(result));
   } catch (error) {
     console.error(`Failed to get assets: ${error}`);
@@ -58,6 +73,9 @@ app.get("/asset-history/:id", async (req, res) => {
   try {
     const result = await evaluateTransaction(
       userId,
+      org,
+      channel,
+      chaincodeName,
       "GetAssetHistory",
       assetId
     );
@@ -71,7 +89,14 @@ app.get("/asset-history/:id", async (req, res) => {
 app.get("/asset/:id", async (req, res) => {
   const assetId = req.params.id;
   try {
-    const result = await evaluateTransaction(userId, "ReadAsset", assetId);
+    const result = await evaluateTransaction(
+      userId,
+      org,
+      channel,
+      chaincodeName,
+      "ReadAsset",
+      assetId
+    );
     res.status(200).json(JSON.parse(result));
   } catch (error) {
     console.error(`Failed to get assets: ${error}`);
@@ -83,7 +108,7 @@ app.get("/asset/:id", async (req, res) => {
 app.delete("/delete-asset/:id", async (req, res) => {
   const assetId = req.params.id;
   try {
-    await submitTransaction(userId, "DeleteAsset", assetId);
+    await submitTransaction(userId, org, channel, chaincodeName, "DeleteAsset", assetId);
     res.status(200).send(`Asset with ID ${assetId} has been deleted.`);
   } catch (error) {
     console.error(`Failed to get assets: ${error}`);
@@ -102,6 +127,9 @@ app.put("/asset/transfer", async (req, res) => {
   try {
     const oldOwner = await submitTransaction(
       userId,
+      org,
+      channel,
+      chaincodeName,
       "TransferAsset",
       assetId,
       newOwner

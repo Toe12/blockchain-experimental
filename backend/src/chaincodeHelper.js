@@ -1,12 +1,12 @@
 const { Gateway, Wallets } = require("fabric-network");
-const helper = require("./helper"); // Assuming helper.js exists as per your original code
+const helper = require("./helper"); 
 const path = require("path");
 const walletPath = path.join(__dirname, "wallet");
 
 // Setup a function to get the contract from the network
-async function getContract(userId) {
+async function getContract(userId, org, channel, chaincode) {
   try {
-    const ccp = helper.buildCCPOrg1();
+    const ccp = helper.buildCCPForOrg(org);
     const wallet = await helper.buildWallet(Wallets, walletPath);
 
     const gateway = new Gateway();
@@ -16,16 +16,16 @@ async function getContract(userId) {
       discovery: { enabled: true, asLocalhost: true },
     });
 
-    const network = await gateway.getNetwork("channel1");
-    return network.getContract("basic");
+    const network = await gateway.getNetwork(channel);
+    return network.getContract(chaincode);
   } catch (e) {
     throw new Error(`Error in getContract: ${e}`);
   }
 }
 
-async function evaluateTransaction(userId, fnName, ...args) {
+async function evaluateTransaction(userId, org, channel, chaincode,fnName, ...args) {
   try {
-    const contract = await getContract(userId);
+    const contract = await getContract(userId, org, channel, chaincode);
     const result = await contract.evaluateTransaction(fnName, ...args);
     return result.toString();
   } catch (e) {
@@ -33,9 +33,9 @@ async function evaluateTransaction(userId, fnName, ...args) {
   }
 }
 
-async function submitTransaction(userId, fnName, ...args) {
+async function submitTransaction(userId, org, channel, chaincode, fnName, ...args) {
   try {
-    const contract = await getContract(userId);
+    const contract = await getContract(userId, org, channel, chaincode);
     const result = await contract.submitTransaction(fnName, ...args);
     return result.toString();
   } catch (e) {

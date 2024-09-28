@@ -1,15 +1,16 @@
-/**
- * helper functions
- */
-
 const path = require("path");
 const fs = require("fs");
 
 /**
- * loads the existing CCP for Org1
+ * Loads the existing CCP (Common Connection Profile) for any organization.
+ * @param {string} orgName - The name of the organization (e.g., 'org1').
  */
-exports.buildCCPOrg1 = function () {
-  // load the common connection configuration file
+exports.buildCCPForOrg = function (orgName) {
+  if (!orgName) {
+    throw new Error("Organization name must be provided.");
+  }
+
+  // load the common connection configuration file for the specified organization
   const ccpPath = path.resolve(
     __dirname,
     "..",
@@ -17,13 +18,15 @@ exports.buildCCPOrg1 = function () {
     "test-network",
     "organizations",
     "peerOrganizations",
-    "org1.example.com",
-    "connection-org1.json"
+    `${orgName}.example.com`,
+    `connection-${orgName}.json`
   );
+
   const fileExists = fs.existsSync(ccpPath);
   if (!fileExists) {
-    throw new Error(`no such file or directory: ${ccpPath}`);
+    throw new Error(`No such file or directory: ${ccpPath}`);
   }
+
   const contents = fs.readFileSync(ccpPath, "utf8");
 
   // build a JSON object from the file contents
@@ -34,9 +37,9 @@ exports.buildCCPOrg1 = function () {
 };
 
 /**
- * Create a new  wallet : Note that wallet is for managing identities.
- * @param {*} Wallets
- * @param {*} walletPath
+ * Creates a new wallet. Note that the wallet is for managing identities.
+ * @param {*} Wallets - The Wallets class from Fabric SDK.
+ * @param {string} [walletPath] - Optional path to store wallet files.
  */
 exports.buildWallet = async function (Wallets, walletPath) {
   let wallet;
@@ -45,15 +48,16 @@ exports.buildWallet = async function (Wallets, walletPath) {
     console.log(`Built a file system wallet at ${walletPath}`);
   } else {
     wallet = await Wallets.newInMemoryWallet();
-    console.log("Built an in memory wallet");
+    console.log("Built an in-memory wallet");
   }
 
   return wallet;
 };
 
 /**
- * create a json string
- * @param {*} inputString
+ * Converts a string to a pretty JSON string format.
+ * @param {string} inputString - The string to be converted to pretty JSON.
+ * @returns {string} - The pretty-printed JSON string.
  */
 exports.prettyJSONString = function (inputString) {
   return JSON.stringify(JSON.parse(inputString), null, 2);
