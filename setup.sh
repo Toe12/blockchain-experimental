@@ -1,5 +1,9 @@
 #!/bin/bash
 
+export PATH=${PWD}/bin:$PATH
+
+currentDir=$(pwd)
+
 # Switch to the test network folder
 cd test-network
 
@@ -8,8 +12,7 @@ cd test-network
 # Bring up the network and create a channel
 ./network.sh up createChannel -c channel1 -ca
 
-# Set Fabric configuration path
-export FABRIC_CFG_PATH=$PWD/../config/
+export FABRIC_CFG_PATH=$currentDir/config
 
 # Package the chaincode
 peer lifecycle chaincode package basic.tar.gz --path ../chaincode-javascript/ --lang node --label basic_1.0
@@ -25,7 +28,7 @@ peer lifecycle chaincode install basic.tar.gz
 
 # Query installed chaincode and get the package ID (PKGID)
 setGlobals 1
-PKGID=$(peer lifecycle chaincode queryinstalled --peerAddresses localhost:7051 --tlsRootCertFiles organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt | grep "basic_1.0" | awk -F 'Package ID: ' '{print $2}' | awk -F ',' '{print $1}' | tr -d ' ')
+export PKGID=$(peer lifecycle chaincode queryinstalled --peerAddresses localhost:7051 --tlsRootCertFiles organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt | grep "basic_1.0" | awk -F 'Package ID: ' '{print $2}' | awk -F ',' '{print $1}' | tr -d ' ')
 
 # Print the captured PKGID for verification
 echo "PKGID is $PKGID"

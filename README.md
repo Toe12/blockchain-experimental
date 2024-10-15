@@ -1,5 +1,11 @@
 ## Using Node.js as an Application Developer
 
+### Download the Fabric binaries and Docker images:
+
+```sh
+curl -sSL https://bit.ly/2ysbOFE | bash -s
+```
+
 ### Node.js as a Chaincode Example
 
 1. **Set Up the Network**:  
@@ -42,7 +48,7 @@ We utilize the following helper files for managing the chaincode and certificate
    Use the following command to enroll the admin user:
 
    ```bash
-   node caActions.js admin
+   node caActions.js admin <orgName>
    ```
 
 2. **Register and Enroll Application User**:
@@ -50,7 +56,7 @@ We utilize the following helper files for managing the chaincode and certificate
    Use this command to register and enroll a new application user, such as `toearkar`:
 
    ```bash
-   node caActions.js user toearkar
+   node caActions.js user <username> <orgName>
    ```
 
 ## Additional Resources
