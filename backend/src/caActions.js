@@ -12,12 +12,15 @@ const helper = require("./helper");
 const FabricCAServices = require("fabric-ca-client");
 const { Wallets } = require("fabric-network");
 
-// CA admin credentions based on test-network
+// CA admin credentials (these can be set per organization)
 const adminUserId = "admin";
 const adminUserPasswd = "adminpw";
 
-// wallet path
-const walletPath = path.join(__dirname, "wallet");
+// wallet paths
+const walletPaths = {
+  org1: path.join(__dirname, "wallet-org1"),
+  org2: path.join(__dirname, "wallet-org2"),
+};
 
 /**
  * Create a new CA client for interacting with the CA
@@ -26,7 +29,6 @@ const walletPath = path.join(__dirname, "wallet");
  * @param {*} caHostName
  */
 function buildCAClient(FabricCAServices, ccp, caHostName) {
-  //lookup CA details from config
   const caInfo = ccp.certificateAuthorities[caHostName];
   const caTLSCACerts = caInfo.tlsCACerts.pem;
   const caClient = new FabricCAServices(
@@ -47,7 +49,6 @@ function buildCAClient(FabricCAServices, ccp, caHostName) {
  */
 async function enrollAdmin(caClient, wallet, orgMspId) {
   try {
-    // Check to see if we've already enrolled the admin user.
     const identity = await wallet.get(adminUserId);
     if (identity) {
       console.log(
@@ -56,7 +57,6 @@ async function enrollAdmin(caClient, wallet, orgMspId) {
       return;
     }
 
-    // Enroll the admin user, and import the new identity into the wallet.
     const enrollment = await caClient.enroll({
       enrollmentID: adminUserId,
       enrollmentSecret: adminUserPasswd,
@@ -74,7 +74,7 @@ async function enrollAdmin(caClient, wallet, orgMspId) {
       "Successfully enrolled admin user and imported it into the wallet"
     );
   } catch (error) {
-    console.error(`Failed to enroll admin user : ${error}`);
+    console.error(`Failed to enroll admin user: ${error}`);
   }
 }
 
@@ -94,7 +94,6 @@ async function registerAndEnrollUser(
   affiliation
 ) {
   try {
-    // Check to see if we've already enrolled the user
     const userIdentity = await wallet.get(userId);
     if (userIdentity) {
       console.log(
@@ -103,7 +102,6 @@ async function registerAndEnrollUser(
       return;
     }
 
-    // Must use an admin to register a new user
     const adminIdentity = await wallet.get(adminUserId);
     if (!adminIdentity) {
       console.log(
@@ -113,14 +111,11 @@ async function registerAndEnrollUser(
       return;
     }
 
-    // build a user object for authenticating with the CA
     const provider = wallet
       .getProviderRegistry()
       .getProvider(adminIdentity.type);
     const adminUser = await provider.getUserContext(adminIdentity, adminUserId);
 
-    // Register the user, enroll the user, and import the new identity into the wallet.
-    // if affiliation is specified by client, the affiliation value must be configured in CA
     const secret = await caClient.register(
       {
         affiliation: affiliation,
@@ -141,65 +136,85 @@ async function registerAndEnrollUser(
       mspId: orgMspId,
       type: "X.509",
     };
-    console.log(x509Identity);
     await wallet.put(userId, x509Identity);
     console.log(
       `Successfully registered and enrolled user ${userId} and imported it into the wallet`
     );
   } catch (error) {
-    console.error(`Failed to register user : ${error}`);
+    console.error(`Failed to register user ${userId}: ${error}`);
   }
 }
 
 /**
- * Enroll an admin user for Org1
+ * Enroll an admin user for a given organization
+ * @param {string} orgName - The name of the organization (e.g., "org1")
  */
-async function getAdmin() {
-  let ccp = helper.buildCCPOrg1();
+async function getAdmin(orgName) {
+  let ccp = helper.buildCCPForOrg(orgName); // Dynamically build the CCP for the given org
 
-  // build an instance of the fabric ca services client based on
-  // the information in the network configuration
-  const caClient = buildCAClient(FabricCAServices, ccp, "ca.org1.example.com");
+  const caClient = buildCAClient(
+    FabricCAServices,
+    ccp,
+    `ca.${orgName}.example.com`
+  );
 
-  // setup the wallet to hold the credentials of the application user
-  const wallet = await helper.buildWallet(Wallets, walletPath);
+  const wallet = await helper.buildWallet(Wallets, walletPaths[orgName]); // Use the wallet specific to each org
 
-  // in a real application this would be done on an administrative flow, and only once
-  await enrollAdmin(caClient, wallet, "Org1MSP");
+  if (orgName === "org1") {
+    await enrollAdmin(caClient, wallet, "Org1MSP");
+  } else if (orgName === "org2") {
+    await enrollAdmin(caClient, wallet, "Org2MSP");
+  } else {
+    throw new Error("Organization not recognized");
+  }
 }
 
 /**
- * Register and enroll an application user for Org1
- * @param {*} org1UserId
+ * Register and enroll an application user for a given organization
+ * @param {string} orgName - The name of the organization (e.g., "org1")
+ * @param {string} userId - The user ID for the new user to be registered and enrolled
  */
-async function getUser(org1UserId) {
-  let ccp = helper.buildCCPOrg1();
+async function getUser(orgName, userId) {
+  let ccp = helper.buildCCPForOrg(orgName); // Dynamically build the CCP for the given org
 
-  // build an instance of the fabric ca services client based on
-  // the information in the network configuration
-  const caClient = buildCAClient(FabricCAServices, ccp, "ca.org1.example.com");
-
-  // setup the wallet to hold the credentials of the application user
-  const wallet = await helper.buildWallet(Wallets, walletPath);
-
-  await registerAndEnrollUser(
-    caClient,
-    wallet,
-    "Org1MSP",
-    org1UserId,
-    "org1.department1"
+  const caClient = buildCAClient(
+    FabricCAServices,
+    ccp,
+    `ca.${orgName}.example.com`
   );
+
+  const wallet = await helper.buildWallet(Wallets, walletPaths[orgName]);
+
+  if (orgName === "org1") {
+    await registerAndEnrollUser(
+      caClient,
+      wallet,
+      "Org1MSP",
+      userId,
+      "org1.department1"
+    );
+  } else if (orgName === "org2") {
+    await registerAndEnrollUser(
+      caClient,
+      wallet,
+      "Org2MSP",
+      userId,
+      "org2.department1"
+    );
+  } else {
+    throw new Error("Organization not recognized");
+  }
 }
 
 let args = process.argv;
 
 if (args[2] === "admin") {
-  // node caActions.js admin
-  getAdmin();
+  const orgName = args[3];
+  getAdmin(orgName);
 } else if (args[2] === "user") {
-  // node caActions.js user peter
-  let org1UserId = args[3];
-  getUser(org1UserId);
+  const orgName = args[3];
+  const userId = args[4];
+  getUser(orgName, userId);
 } else {
-  console.log("...");
+  console.log("Usage: node caActions.js <admin|user> <orgName> [userId]");
 }

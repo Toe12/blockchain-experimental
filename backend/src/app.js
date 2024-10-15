@@ -5,7 +5,7 @@ const app = express();
 app.use(express.json());
 
 // This needs to be retirieved from the db or config file
-const userId = "toe";
+const userId = "arkar";
 const org = "org2";
 const channel = "channel1";
 const chaincodeName = "basic";

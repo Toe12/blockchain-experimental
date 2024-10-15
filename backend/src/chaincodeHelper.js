@@ -1,12 +1,20 @@
 const { Gateway, Wallets } = require("fabric-network");
-const helper = require("./helper"); 
+const helper = require("./helper");
 const path = require("path");
-const walletPath = path.join(__dirname, "wallet");
+
+// Function to dynamically get the wallet path based on the organization
+function getWalletPath(org) {
+  return path.join(__dirname, `wallet-${org}`);
+}
 
 // Setup a function to get the contract from the network
 async function getContract(userId, org, channel, chaincode) {
   try {
     const ccp = helper.buildCCPForOrg(org);
+
+    // Dynamically set the wallet path based on the organization
+    const walletPath = getWalletPath(org);
+
     const wallet = await helper.buildWallet(Wallets, walletPath);
 
     const gateway = new Gateway();
@@ -23,7 +31,14 @@ async function getContract(userId, org, channel, chaincode) {
   }
 }
 
-async function evaluateTransaction(userId, org, channel, chaincode,fnName, ...args) {
+async function evaluateTransaction(
+  userId,
+  org,
+  channel,
+  chaincode,
+  fnName,
+  ...args
+) {
   try {
     const contract = await getContract(userId, org, channel, chaincode);
     const result = await contract.evaluateTransaction(fnName, ...args);
@@ -33,7 +48,14 @@ async function evaluateTransaction(userId, org, channel, chaincode,fnName, ...ar
   }
 }
 
-async function submitTransaction(userId, org, channel, chaincode, fnName, ...args) {
+async function submitTransaction(
+  userId,
+  org,
+  channel,
+  chaincode,
+  fnName,
+  ...args
+) {
   try {
     const contract = await getContract(userId, org, channel, chaincode);
     const result = await contract.submitTransaction(fnName, ...args);
