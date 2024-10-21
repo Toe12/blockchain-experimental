@@ -5,9 +5,9 @@ const app = express();
 app.use(express.json());
 
 // This needs to be retirieved from the db or config file
-const userId = "arkar";
-const org = "org2";
-const channel = "channel1";
+const userId = "admin";
+const org = "org1";
+const channel = "mychannel";
 const chaincodeName = "basic";
 
 app.post("/create-asset", async (req, res) => {
@@ -108,7 +108,14 @@ app.get("/asset/:id", async (req, res) => {
 app.delete("/delete-asset/:id", async (req, res) => {
   const assetId = req.params.id;
   try {
-    await submitTransaction(userId, org, channel, chaincodeName, "DeleteAsset", assetId);
+    await submitTransaction(
+      userId,
+      org,
+      channel,
+      chaincodeName,
+      "DeleteAsset",
+      assetId
+    );
     res.status(200).send(`Asset with ID ${assetId} has been deleted.`);
   } catch (error) {
     console.error(`Failed to get assets: ${error}`);
