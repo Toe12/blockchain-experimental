@@ -14,17 +14,10 @@ This guide covers the prerequisites, setup instructions, and steps to develop an
    brew install node jq
    ```
 
-4. **Go**: Install Go, as Hyperledger Fabric requires it for certain components:
-
-   ```sh
-   brew install go
-   ```
-
 ### For Linux:
 
 1. **Docker**: Install Docker using your preferred package manager (e.g., `apt-get`, `yum`).
 2. **Node.js, jq, and npm**: Install using your package manager (e.g., `apt-get`, `yum`).
-3. **Go**: Install Go using your package manager (e.g., `apt-get`, `yum`).
 
 ---
 
