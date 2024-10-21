@@ -179,4 +179,4 @@ curl -sSL https://bit.ly/2ysbOFE | bash -s
 
 ---
 
-This README provides a complete guide to setting up and using Node.js as an application developer with Hyperledger Fabric on both Mac and Linux systems. Let me know if there are any further changes or if you want to add more sections!
+This README provides a complete guide to setting up and using Node.js as an application developer with Hyperledger Fabric on both Mac and Linux systems. 
